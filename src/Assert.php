@@ -2,6 +2,7 @@
 
 namespace Atournayre\Assert;
 
+use Geocoder\Exception\InvalidArgument;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Bic;
 use Symfony\Component\Validator\Constraints\Iban;
@@ -135,7 +136,14 @@ class Assert extends \Webmozart\Assert\Assert
         }
     }
 
-    public static function validateAndThrowConstraintViolationList(string $string, array $constraints): void
+    /**
+     * @param string                 $string
+     * @param array<int, Constraint> $constraints
+     * @param string                 $message
+     *
+     * @return void
+     */
+    public static function throwConstraintViolationList(string $string, array $constraints, string $message = ''): void
     {
         Assert::allIsInstanceOf($constraints, Constraint::class);
 
@@ -143,29 +151,62 @@ class Assert extends \Webmozart\Assert\Assert
             ->validate($string, $constraints);
 
         if (count($constraintViolationList) > 0) {
-            throw new InvalidArgumentException($constraintViolationList[0]->getMessage());
+            $message = $message ?: $constraintViolationList[0]->getMessage();
+            throw new InvalidArgumentException($message);
         }
     }
 
     /**
      * @param string $string
+     * @param string $message
      *
      * @return void
-     * @throws InvalidArgumentException
      */
-    public static function isBIC(string $string): void
+    public static function isBIC(string $string, string $message = ''): void
     {
-        self::validateAndThrowConstraintViolationList($string, [new Bic()]);
+        self::throwConstraintViolationList($string, [new Bic()], $message);
     }
 
     /**
-     * @param string $int
+     * @param string $string
+     * @param string $message
      *
      * @return void
-     * @throws InvalidArgumentException
      */
-    public static function isIBAN(string $int): void
+    public static function isIBAN(string $string, string $message = ''): void
     {
-        self::validateAndThrowConstraintViolationList($int, [new Iban()]);
+        self::throwConstraintViolationList($string, [new Iban()], $message);
+    }
+
+    /**
+     * @param float  $value
+     * @param string $message
+     *
+     * @return void
+     */
+    public static function latitude(float $value, string $message = ''): void
+    {
+        self::float($value, $message);
+        if ($value < -90 || $value > 90) {
+            throw new InvalidArgumentException(
+                sprintf($message ?: 'Latitude should be between -90 and 90. Got: %s', $value)
+            );
+        }
+    }
+
+    /**
+     * @param float  $value
+     * @param string $message
+     *
+     * @return void
+     */
+    public static function longitude(float $value, string $message = ''): void
+    {
+        self::float($value, $message);
+        if ($value < -180 || $value > 180) {
+            throw new InvalidArgumentException(
+                sprintf($message ?: 'Longitude should be between -180 and 180. Got: %s', $value)
+            );
+        }
     }
 }
