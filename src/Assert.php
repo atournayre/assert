@@ -2,7 +2,12 @@
 
 namespace Atournayre\Assert;
 
+use Symfony\Component\Validator\Constraint;
+use Symfony\Component\Validator\Constraints\Bic;
+use Symfony\Component\Validator\Validation;
 use Webmozart\Assert\InvalidArgumentException;
+use function gettype;
+use function is_array;
 use function sprintf;
 
 class Assert extends \Webmozart\Assert\Assert
@@ -117,15 +122,38 @@ class Assert extends \Webmozart\Assert\Assert
      */
     public static function allIsType(mixed $value, string $type, string $message = ''): void
     {
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             throw new InvalidArgumentException(sprintf(
                 'Invalid type "%s". Expected array.',
-                \gettype($value)
+                gettype($value)
             ));
         }
 
         foreach ($value as $element) {
             static::isType($element, $type, $message);
         }
+    }
+
+    public static function validateAndThrowConstraintViolationList(string $string, array $constraints): void
+    {
+        Assert::allIsInstanceOf($constraints, Constraint::class);
+
+        $constraintViolationList = Validation::createValidator()
+            ->validate($string, $constraints);
+
+        if (count($constraintViolationList) > 0) {
+            throw new InvalidArgumentException($constraintViolationList[0]->getMessage());
+        }
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    public static function isBIC(string $string): void
+    {
+        self::validateAndThrowConstraintViolationList($string, [new Bic()]);
     }
 }

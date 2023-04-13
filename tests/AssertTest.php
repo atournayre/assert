@@ -4,6 +4,7 @@ namespace Atournayre\Assert\Tests;
 
 use Atournayre\Assert\Assert;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Validator\Constraints\Bic;
 
 class AssertTest extends TestCase
 {
@@ -137,4 +138,56 @@ class AssertTest extends TestCase
             throw $e;
         }
     }
+
+    public function testBICValid()
+    {
+        $validBics = [
+            'ASPKAT2LXXX',
+            'ASPKAT2L',
+            'DSBACNBXSHA',
+            'UNCRIT2B912',
+            'DABADKKK',
+            'RZOOAT2L303',
+        ];
+
+        foreach ($validBics as $bic) {
+            try {
+                Assert::isBIC($bic);
+                $this->assertTrue(true);
+            } catch (\InvalidArgumentException $e) {
+                throw $e;
+            }
+        }
+    }
+
+    public function testBICInvalid()
+    {
+        $invalidBics = [
+            'DEUTD',
+            'ASPKAT2LXX',
+            'ASPKAT2LX',
+            'ASPKAT2LXXX1',
+            'DABADKK',
+            '1SBACNBXSHA',
+            'RZ00AT2L303',
+            'D2BACNBXSHA',
+            'DS3ACNBXSHA',
+            'DSB4CNBXSHA',
+            'DEUT12HH',
+            'DSBAC6BXSHA',
+            'DSBA5NBXSHA',
+            'DSBAAABXSHA',
+            'THISSVAL1D]',
+            'DEUTDEF]',
+            'DeutAT2LXXX',
+            'DEUTAT2lxxx',
+        ];
+
+        foreach ($invalidBics as $bic) {
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('This is not a valid Business Identifier Code (BIC).');
+            Assert::isBIC($bic);
+        }
+    }
+
 }

@@ -16,7 +16,9 @@
     "require": {
         "php": ">=8.0",
         "ext-ctype": "*",
-        "webmozart/assert": "^1.11"
+        "webmozart/assert": "^1.11",
+        "symfony/validator": "^6.2",
+        "symfony/intl": "^6.2"
     },
     "conflict": {
         "phpstan/phpstan": "<0.12.20",
