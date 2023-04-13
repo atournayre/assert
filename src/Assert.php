@@ -4,6 +4,7 @@ namespace Atournayre\Assert;
 
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Bic;
+use Symfony\Component\Validator\Constraints\Iban;
 use Symfony\Component\Validator\Validation;
 use Webmozart\Assert\InvalidArgumentException;
 use function gettype;
@@ -155,5 +156,16 @@ class Assert extends \Webmozart\Assert\Assert
     public static function isBIC(string $string): void
     {
         self::validateAndThrowConstraintViolationList($string, [new Bic()]);
+    }
+
+    /**
+     * @param string $int
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    public static function isIBAN(string $int): void
+    {
+        self::validateAndThrowConstraintViolationList($int, [new Iban()]);
     }
 }
