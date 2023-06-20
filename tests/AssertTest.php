@@ -4,7 +4,6 @@ namespace Atournayre\Assert\Tests;
 
 use Atournayre\Assert\Assert;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Validator\Constraints\Bic;
 
 class AssertTest extends TestCase
 {
@@ -439,5 +438,61 @@ class AssertTest extends TestCase
             $this->expectExceptionMessage('This is not a valid International Bank Account Number (IBAN).');
             Assert::isIBAN($iban[0]);
         }
+    }
+
+    public function testEmailValid()
+    {
+        $validEmails = [
+            ['fabien@symfony.com'],
+            ['example@example.co.uk'],
+            ['fabien_potencier@example.fr'],
+            ['example@example.co..uk'],
+            ['{}~!@!@£$%%^&*().!@£$%^&*()'],
+            ['example@example.co..uk'],
+            ['example@-example.com'],
+            ['user-very-long-jlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaa@domain.com'], // 255 characters
+            ['user@domain-very-long-jlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaaa.com'], // 255 characters
+        ];
+
+        foreach ($validEmails as $email) {
+            try {
+                Assert::email($email[0]);
+                $this->assertTrue(true);
+            } catch (\InvalidArgumentException $e) {
+                throw $e;
+            }
+        }
+    }
+
+    public function testEmailInvalid()
+    {
+        $invalidEmails = [
+            ['example'],
+            ['example@'],
+            ['example@localhost'],
+            ['foo@example.com bar'],
+            ['example@example.'],
+            ['example@.fr'],
+            ['@example.com'],
+            ['example@.'],
+            ['example@ '],
+            [' example@example.com '],
+            [' example @example .com '],
+            ['foo@example.com bar']
+        ];
+
+        $countErrors = 0;
+
+        foreach ($invalidEmails as $email) {
+            try {
+                Assert::email($email[0]);
+            } catch (\Exception $e) {
+                self::assertInstanceOf(\InvalidArgumentException::class, $e);
+                self::assertEquals('This value is not a valid email address.', $e->getMessage());
+                $countErrors++;
+                continue;
+            }
+        }
+        self::assertEquals(count($invalidEmails), $countErrors);
     }
 }
