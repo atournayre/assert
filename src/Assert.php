@@ -6,6 +6,7 @@ use Geocoder\Exception\InvalidArgument;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Bic;
 use Symfony\Component\Validator\Constraints\Iban;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Validation;
 use Webmozart\Assert\InvalidArgumentException;
 use function gettype;
@@ -208,5 +209,13 @@ class Assert extends \Webmozart\Assert\Assert
                 sprintf($message ?: 'Longitude should be between -180 and 180. Got: %s', $value)
             );
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function email($value, $message = ''): void
+    {
+        self::throwConstraintViolationList($value, [new Email()], $message);
     }
 }
