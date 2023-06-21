@@ -141,22 +141,17 @@ class AssertTest extends TestCase
     public function testBICValid()
     {
         $validBics = [
-            'ASPKAT2LXXX',
-            'ASPKAT2L',
-            'DSBACNBXSHA',
-            'UNCRIT2B912',
-            'DABADKKK',
-            'RZOOAT2L303',
+            ['ASPKAT2LXXX'],
+            ['ASPKAT2L'],
+            ['DSBACNBXSHA'],
+            ['UNCRIT2B912'],
+            ['DABADKKK'],
+            ['RZOOAT2L303'],
         ];
 
-        foreach ($validBics as $bic) {
-            try {
-                Assert::isBIC($bic);
-                $this->assertTrue(true);
-            } catch (\InvalidArgumentException $e) {
-                throw $e;
-            }
-        }
+        self::assertNoExceptions($validBics, function ($bic) {
+            Assert::isBIC($bic);
+        });
     }
 
     public function testBICInvalid()
@@ -182,11 +177,13 @@ class AssertTest extends TestCase
             'DEUTAT2lxxx',
         ];
 
-        foreach ($invalidBics as $bic) {
-            $this->expectException(\InvalidArgumentException::class);
-            $this->expectExceptionMessage('This is not a valid Business Identifier Code (BIC).');
-            Assert::isBIC($bic);
-        }
+        self::assertExceptions(
+            $invalidBics,
+            'This is not a valid Business Identifier Code (BIC).',
+            function ($bic) {
+                Assert::isBIC($bic);
+            }
+        );
     }
 
     public function testIBANValid()
@@ -313,14 +310,9 @@ class AssertTest extends TestCase
             ['VA59001123000012345678'], // Vatican City State
         ];
 
-        foreach ($validIBANs as $iban) {
-            try {
-                Assert::isIBAN($iban[0]);
-                $this->assertTrue(true);
-            } catch (\InvalidArgumentException $e) {
-                throw $e;
-            }
-        }
+        self::assertNoExceptions($validIBANs, function ($iban) {
+            Assert::isIBAN($iban);
+        });
     }
 
     public function testIBANInvalid()
@@ -433,11 +425,13 @@ class AssertTest extends TestCase
             ['VA590011230000123456781'], // Vatican City State
         ];
 
-        foreach ($invalidIBANs as $iban) {
-            $this->expectException(\InvalidArgumentException::class);
-            $this->expectExceptionMessage('This is not a valid International Bank Account Number (IBAN).');
-            Assert::isIBAN($iban[0]);
-        }
+        self::assertExceptions(
+            $invalidIBANs,
+            'This is not a valid International Bank Account Number (IBAN).',
+            function ($iban) {
+                Assert::isIBAN($iban);
+            }
+        );
     }
 
     public function testEmailValid()
@@ -454,14 +448,9 @@ class AssertTest extends TestCase
             ['user@domain-very-long-jlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaajlaaaaaaaaaaaaaaaaaa.com'], // 255 characters
         ];
 
-        foreach ($validEmails as $email) {
-            try {
-                Assert::email($email[0]);
-                $this->assertTrue(true);
-            } catch (\InvalidArgumentException $e) {
-                throw $e;
-            }
-        }
+        self::assertNoExceptions($validEmails, function ($email) {
+            Assert::email($email);
+        });
     }
 
     public function testEmailInvalid()
@@ -481,18 +470,41 @@ class AssertTest extends TestCase
             ['foo@example.com bar']
         ];
 
-        $countErrors = 0;
+        self::assertExceptions(
+            $invalidEmails,
+            'This value is not a valid email address.',
+            function ($email) {
+                Assert::email($email);
+            }
+        );
+    }
 
-        foreach ($invalidEmails as $email) {
+    private static function assertExceptions(array $datas, string $expectedMessage, callable $method): void
+    {
+        $countErrors = 0;
+        foreach ($datas as $item) {
             try {
-                Assert::email($email[0]);
+                $method($item[0]);
+                Assert::$method($item[0]);
             } catch (\Exception $e) {
                 self::assertInstanceOf(\InvalidArgumentException::class, $e);
-                self::assertEquals('This value is not a valid email address.', $e->getMessage());
+                self::assertEquals($expectedMessage, $e->getMessage());
                 $countErrors++;
                 continue;
             }
         }
-        self::assertEquals(count($invalidEmails), $countErrors);
+        self::assertEquals(count($datas), $countErrors);
+    }
+
+    private static function assertNoExceptions(array $datas, callable $method): void
+    {
+        foreach ($datas as $item) {
+            try {
+                $method($item[0]);
+                self::assertTrue(true);
+            } catch (\InvalidArgumentException $e) {
+                throw $e;
+            }
+        }
     }
 }
